@@ -1,24 +1,95 @@
-var express = require('express'); //a variable that contains module called express
-var app = express(); //module is actually a function
-var bodyparser=require('body-parser');//this is required to store the
-app.use(bodyparser.json());
-var data={};
-//a method that recieves a request and serves a response
-app.get('/', function (req, res) {
-  res.json({status:'success'});
-});
-//creating a post api
-app.post('/data',function(req,res){
-	console.log(req.body.data);
-	data=req.body;
-	res.json(data);
-});
-app.get('/data',function(req,res){
-	res.json(data);
+const express = require('express'); //a constiable that contains module called express
+const app = express(); //module is actually a function
+
+const bodyParser=require('body-parser');//this is required to store the
+//Body-parser middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+const routes =require("./routes/routes.js")(app);
+const users=require("./routes/users");
+let data={};
+///new modules required
+const path              = require('path');
+const cookieParser      = require('cookie-parser');
+const exphbs            = require('express-handlebars');
+const expressValidator  = require('express-validator');
+const flash             = require('connect-flash');
+const session           = require('express-session');
+const passport          = require('passport');
+const LocalStrategy     = require('passport-local').Strategy;
+const port = process.env.PORT || 5000;
+
+//Postgres database connection
+const pgp=require('pg-promise') //module requirement
+//creating a connection
+const connection={
+	host:'localhost',
+	port:5432,
+	user:'hackerbay',
+	password:'',
+	database:'userdata'
+};
+const db = pgp(connection);
+
+
+
+
+
+
+// JSON Formatting
+app.set('json spaces', 4);
+ //Set Static Foler (style sheets, images)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Express Session
+app.use(session({ 
+    secret: 'secret',
+    saveUninitialized: true,
+    resave: true,
+}));
+
+// Passport init
+app.use(passport.initialize()); 
+app.use(passport.session());
+
+// Express Validator
+app.use(expressValidator({
+    errorFormatter: function(param, msg, value) {
+          var namespace = param.split('.')
+          , root = namespace.shift()
+          , formParam = root;
+
+        while(namespace.length) {
+            formParam += '[' +  namespace.shift() + ']';
+        }
+        return {
+            param : formParam,
+            msg : msg,
+            value: value,
+        };
+    }
+}));
+
+// Connect Flash
+app.use(flash());
+
+// Global Variables
+app.use(function (req, res, next) {
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    res.locals.error = req.flash('error');
+    
+    next();
 });
 
+// View engine
+app.set('views', path.join(__dirname, 'views'));
+app.engine('handlebars', exphbs({defaultLayout: 'layout'}));
+app.set('view engine', 'handlebars');
+
+
+require('./routes')(app, db);
 //listen method starts a server and listen on the port 3000
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
+app.listen(port, function () {
+  console.log('App listening on port :' + port );
 });
-   
