@@ -1,10 +1,14 @@
-const express = require('express'); //a constiable that contains module called express
-const app = express(); //module is actually a function
+const express = require('express'); 
+const app = express(); 
+const morgan=require('morgan');
+const config = require('./config/main');
+const bodyParser=require('body-parser');
 
-const bodyParser=require('body-parser');//this is required to store the
+
 //Body-parser middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
+
 const routes =require("./routes/routes.js")(app);
 const users=require("./routes/users");
 let data={};
@@ -18,7 +22,7 @@ const session           = require('express-session');
 const passport          = require('passport');
 const LocalStrategy     = require('passport-local').Strategy;
 const port = process.env.PORT || 5000;
-
+const jwt = require('jsonwebtoken');
 //Postgres database connection
 const pgp=require('pg-promise') //module requirement
 //creating a connection
@@ -31,13 +35,9 @@ const connection={
 };
 const db = pgp(connection);
 
-
-
-
-
-
 // JSON Formatting
 app.set('json spaces', 4);
+
  //Set Static Foler (style sheets, images)
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -81,6 +81,13 @@ app.use(function (req, res, next) {
     
     next();
 });
+
+//log request to console
+app.use(morgan('dev'));
+
+
+// Bring in defined Passport Strategy
+require('./config/passport')(passport);
 
 // View engine
 app.set('views', path.join(__dirname, 'views'));

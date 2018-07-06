@@ -23,7 +23,10 @@
     "passport-http": "^0.3.0",
     "passport-local": "^1.0.0",
     "pg-promise": "^8.4.4",
-    "schema-object": "^4.0.11"
+    "schema-object": "^4.0.11",
+    "jsonwebtoken": "^5.5.4",
+    "morgan": "^1.6.1"
+
   },
   "devDependencies": {
     "nodemon": "^1.17.5"
